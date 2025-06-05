@@ -6,7 +6,7 @@ const JIKAN_API_BASE_URL = 'https://api.jikan.moe/v4';
 interface JikanResponse {
   data: Anime[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  pagination?: any; 
+  pagination?: any; // Keeping this as any for now, as pagination structure might vary or not be strictly typed yet
 }
 
 async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | null, limit: number = 15): Promise<Anime[]> {
@@ -19,8 +19,9 @@ async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | n
     const response = await fetch(url); 
     if (!response.ok) {
       console.error(`Jikan API error for ${url}: ${response.status} - ${response.statusText}`);
-      const errorData = await response.json().catch(() => ({}));
-      console.error("Error data:", errorData);
+      // Try to parse error response from Jikan if available
+      const errorData = await response.json().catch(() => ({ message: "Failed to parse error response" }));
+      console.error("Error data from Jikan:", errorData);
       return [];
     }
     const data: JikanResponse = await response.json();
@@ -33,8 +34,9 @@ async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | n
     });
     return Array.from(uniqueAnimeMap.values()).slice(0, 12);
 
-  } catch (error) {
-    console.error(`Error fetching from Jikan (${url}):`, error);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) { // Added type annotation for caught error
+    console.error(`Error fetching from Jikan (${url}):`, error.message || error);
     return [];
   }
 }
@@ -44,9 +46,11 @@ export async function getTopAnime(): Promise<Anime[]> {
 }
 
 export async function getTopAiringAnime(): Promise<Anime[]> {
+  // Using /top/anime with filter=airing as it often gives more relevant "top" airing
   return fetchJikanEndpoint('/top/anime', 'airing');
 }
 
 export async function getTopUpcomingAnime(): Promise<Anime[]> {
+  // The /seasons/upcoming endpoint does not use the 'filter' query parameter
   return fetchJikanEndpoint('/seasons/upcoming', null); 
 }
