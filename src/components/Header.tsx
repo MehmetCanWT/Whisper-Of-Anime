@@ -2,10 +2,12 @@
 "use client";
 
 import Link from 'next/link';
-// import { useRouter } from 'next/navigation'; // Removed as router was unused
+import Image from 'next/image'; // Import next/image
 import { useState, useCallback, useEffect, useRef, ChangeEvent } from 'react';
 import styles from './Header.module.css'; 
 import { AnimeSuggestion } from '@/lib/types';
+// SearchBar bileşenini import etmeyeceğiz, doğrudan Header içinde olacak
+// import SearchBar from './SearchBar'; 
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,7 +15,6 @@ const Header = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchTimeoutId, setSearchTimeoutId] = useState<NodeJS.Timeout | null>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
-  // const router = useRouter(); // Removed unused variable
 
   const fetchSearchSuggestions = async (query: string) => {
     if (query.length < 3) {
@@ -30,7 +31,7 @@ const Header = () => {
       setSuggestions(data.data || []);
       setShowSuggestions(true);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) { // Type annotation for caught error
+    } catch (error: any) {
       console.error("Error fetching search suggestions:", error);
       setSuggestions([]);
       setShowSuggestions(false);
@@ -41,8 +42,9 @@ const Header = () => {
     if (searchTimeoutId) clearTimeout(searchTimeoutId);
     const newTimeoutId = setTimeout(() => fetchSearchSuggestions(query), 300);
     setSearchTimeoutId(newTimeoutId);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchTimeoutId]); // fetchSearchSuggestions can be omitted if it's stable and doesn't change based on component state/props
+  // fetchSearchSuggestions useCallback bağımlılıklarından çıkarılabilir eğer dışarıdan prop almıyorsa
+  // eslint-disable-next-line react-hooks/exhaustive-deps 
+  }, [searchTimeoutId]); // Removed fetchSearchSuggestions from dependency array if it's stable
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -102,9 +104,13 @@ const Header = () => {
                 tabIndex={0}
                 onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleSuggestionClick(anime.mal_id)}
               >
-                <img
+                <Image
                   src={anime.images.jpg.small_image_url || '/assest/placeholder-poster.png'}
-                  alt={anime.title_english || anime.title}
+                  alt={anime.title_english || anime.title || 'Anime Suggestion Poster'}
+                  width={40}
+                  height={60}
+                  className={styles.suggestionImage} // Add a class if specific styling needed
+                  style={{ objectFit: 'cover', borderRadius: '3px' }}
                 />
                 <span>{anime.title_english || anime.title}</span>
               </div>
@@ -117,3 +123,5 @@ const Header = () => {
 };
 
 export default Header;
+
+        
