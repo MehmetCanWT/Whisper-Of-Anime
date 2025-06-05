@@ -21,7 +21,9 @@ export default function HomePage() {
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
   
+  // currentView: 'main' (quote and lists) or 'detail' (single anime details)
   const [currentView, setCurrentView] = useState<'main' | 'detail'>('main');
+  // activeAnimeId: stores the ID of the anime to be shown in the detail view
   const [activeAnimeId, setActiveAnimeId] = useState<string | null>(null);
 
   const placeholderPosterUrl = '/assest/placeholder-poster.png';
@@ -73,11 +75,11 @@ export default function HomePage() {
   const [topUpcomingAnime, setTopUpcomingAnime] = useState<Anime[]>([]);
   const [isLoadingLists, setIsLoadingLists] = useState(true);
 
-  // Load anime lists only when main view is active
+  // Load anime lists when the component mounts or when returning to main view
   useEffect(() => {
     const loadAnimeLists = async () => {
+      // console.log("Attempting to load anime lists because currentView is main.");
       setIsLoadingLists(true);
-      // console.log("Fetching anime lists for main view");
       const [popular, airing, upcoming] = await Promise.all([
         getTopAnime(),
         getTopAiringAnime(),
@@ -90,18 +92,23 @@ export default function HomePage() {
     };
 
     if (currentView === 'main') {
-        loadAnimeLists();
+      loadAnimeLists();
     }
-  }, [currentView]); // Re-fetch lists if view changes to main
+  }, [currentView]); 
 
   // Fetch anime details function (memoized with useCallback)
   const fetchAnimeDetails = useCallback(async (animeId: string) => {
-    if (!animeId) return;
-    // console.log(`Fetching details for animeId in fetchAnimeDetails: ${animeId}`); // Debug
+    if (!animeId) {
+      setDetailError("No Anime ID provided.");
+      setIsLoadingDetail(false);
+      setDetailedAnime(null);
+      return;
+    }
+    // console.log(`Fetching details for animeId in fetchAnimeDetails: ${animeId}`);
     setIsLoadingDetail(true);
     setDetailError(null);
     setDetailedAnime(null);
-    window.scrollTo(0, 0);
+    window.scrollTo(0, 0); // Scroll to top when detail view loads/changes
     try {
       const response = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/full`);
       if (!response.ok) {
@@ -117,57 +124,59 @@ export default function HomePage() {
     } finally {
       setIsLoadingDetail(false);
     }
-  }, []); // Empty dependency array because it doesn't depend on component state/props directly
+  }, []); // Empty dependency array, as it doesn't rely on component's props/state directly
 
-  // Effect to handle URL hash changes and trigger detail fetch
+  // Effect to handle URL hash changes and trigger view/data updates
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
-      // console.log("Hash changed to:", hash); // Debug
+      // console.log("Hash changed to:", hash, "Current activeAnimeId:", activeAnimeId, "Current view:", currentView);
       if (hash.startsWith('#/anime/')) {
         const animeIdFromHash = hash.substring('#/anime/'.length);
         if (animeIdFromHash) {
-          // console.log(`Anime ID from hash: ${animeIdFromHash}, Current activeAnimeId: ${activeAnimeId}`); // Debug
-          if (animeIdFromHash !== activeAnimeId || currentView !== 'detail') {
-            setActiveAnimeId(animeIdFromHash); // This will trigger the next useEffect
+          if (animeIdFromHash !== activeAnimeId) { // Only update if ID is different
+            // console.log(`New anime ID from hash: ${animeIdFromHash}. Updating activeAnimeId.`);
+            setActiveAnimeId(animeIdFromHash); // This will trigger the detail fetch useEffect
+          }
+          if (currentView !== 'detail') {
+            // console.log("Switching view to 'detail'");
             setCurrentView('detail');
           }
           setShowJikanPlaceholder(false); 
         } else { 
-          // console.log("Invalid anime ID in hash, switching to main view"); // Debug
-          setCurrentView('main');
+          // console.log("Hash is '#/anime/' (no ID), switching to main view.");
+          if (currentView !== 'main') setCurrentView('main');
           setActiveAnimeId(null);
         }
       } else { 
-        // console.log("No anime hash, switching to main view"); // Debug
-        if (currentView !== 'main') { // Only switch if not already main
-            setCurrentView('main');
-            setActiveAnimeId(null);
-        }
-        // Show placeholder only if no quote action has happened yet on main view
-        if (!quoteItem && !isLoadingQuote && currentView === 'main') { 
+        // console.log("No anime hash or different hash, switching to main view.");
+        if (currentView !== 'main') setCurrentView('main');
+        setActiveAnimeId(null);
+        if (!quoteItem && !isLoadingQuote) { 
             setShowJikanPlaceholder(true);
+        } else if (quoteItem || isLoadingQuote) { // Hide placeholder if a quote action has happened
+            setShowJikanPlaceholder(false);
         }
       }
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Call on initial load to check current hash
+    handleHashChange(); // Call on initial load
 
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
-  // Dependencies: ensure this runs if activeAnimeId or currentView changes programmatically elsewhere,
-  // or if quoteItem/isLoadingQuote changes to correctly manage placeholder.
+  // This effect should primarily react to hash changes indirectly.
+  // Direct dependencies that control its logic are included.
   }, [activeAnimeId, currentView, quoteItem, isLoadingQuote]); 
 
   // Effect to fetch details when activeAnimeId is set and view is 'detail'
   useEffect(() => {
     if (currentView === 'detail' && activeAnimeId) {
-      // console.log(`Fetching details because activeAnimeId (${activeAnimeId}) or currentView (${currentView}) changed.`); // Debug
+      // console.log(`Fetching details because activeAnimeId is now ${activeAnimeId} and view is ${currentView}.`);
       fetchAnimeDetails(activeAnimeId);
     }
-  }, [activeAnimeId, currentView, fetchAnimeDetails]); // fetchAnimeDetails is memoized
+  }, [activeAnimeId, currentView, fetchAnimeDetails]);
 
 
   return (
@@ -218,7 +227,7 @@ export default function HomePage() {
           detailedAnime ? <AnimeDetailView anime={detailedAnime} /> : <p className={`${styles.pageMessage} ${styles.infoText}`}>Anime details not found for ID: {activeAnimeId}.</p>
         )}
          {currentView === 'detail' && !activeAnimeId && ( 
-            <p className={`${styles.pageMessage} ${styles.errorText}`}>No Anime ID specified for detail view.</p>
+            <p className={`${styles.pageMessage} ${styles.errorText}`}>No Anime ID specified. Please select an anime.</p>
         )}
       </div>
     </>
