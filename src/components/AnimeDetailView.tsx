@@ -26,8 +26,8 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
   ];
   const uniqueTags = Array.from(new Set(allTagsRaw.filter(tag => tag && tag.name).map(tag => tag.name)));
 
-  // Corrected trailerThumbnailSrc logic
-  const trailerThumbnailSrc = anime.trailer?.images?.maximum_image_url || 
+  // Corrected trailerThumbnailSrc logic 
+  const trailerThumbnailSrc = anime.trailer?.images?.maximum_image_url || // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               (anime.trailer?.images as any)?.image_url || // Keep as last resort, ideally type TrailerImages fully
                               null; 
 

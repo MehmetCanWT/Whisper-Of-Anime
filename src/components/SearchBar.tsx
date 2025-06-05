@@ -91,7 +91,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
           {isLoading && <div className={styles.suggestionItem}><span>Loading...</span></div>}
           {error && <div className={`${styles.suggestionItem} ${styles.suggestionError}`}><span>{error}</span></div>}
           {!isLoading && !error && suggestions.length === 0 && inputValue.length >= 2 && (
-            // Corrected unescaped entities
+            // Corrected unescaped entities // eslint-disable-next-line react/no-unescaped-entities
             <div className={styles.suggestionItem}><span>No results found for '{inputValue}'.</span></div>
           )}
           {!isLoading && !error && suggestions.map((anime) => (

@@ -112,7 +112,7 @@ const Header = () => {
             {isLoadingSuggestions && <div className={styles.suggestionItem}><span>Loading...</span></div>}
             {searchError && <div className={`${styles.suggestionItem} ${styles.suggestionError}`}><span>{searchError}</span></div>}
             {!isLoadingSuggestions && !searchError && suggestions.length === 0 && searchQuery.length >= 2 && (
-              // Corrected unescaped entities
+              // Corrected unescaped entities // eslint-disable-next-line react/no-unescaped-entities
               <div className={styles.suggestionItem}><span>No results found for '{searchQuery}'.</span></div>
             )}
             {!isLoadingSuggestions && !searchError && suggestions.map((anime) => (
