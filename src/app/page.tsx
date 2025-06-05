@@ -2,15 +2,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-// useRouter, usePathname Next.js App Router'da sayfa bazlı yönlendirme için kullanılır.
-// Biz client-side hash routing kullandığımız için bunlara doğrudan ihtiyacımız olmayabilir,
-// ancak kafa karışıklığını önlemek için şimdilik burada tutabiliriz.
-// import { useRouter, usePathname } from 'next/navigation'; 
 import JikanPlaceholder from '@/components/JikanPlaceholder';
 import AnimeApiContent from '@/components/AnimeApiContent';
 import QuoteDisplay from '@/components/QuoteDisplay';
 import AnimeListSection from '@/components/AnimeListSection';
-import AnimeDetailView from '@/components/AnimeDetailView'; // Detay görünümü için
+import AnimeDetailView from '@/components/AnimeDetailView';
 import { QuoteItem, AnimeInfoForQuote, JikanAnimeFull, Anime } from '@/lib/types';
 import { getTopAnime, getTopAiringAnime, getTopUpcomingAnime } from '@/lib/api'; 
 import styles from './page.module.css';
@@ -26,7 +22,7 @@ export default function HomePage() {
   const [detailError, setDetailError] = useState<string | null>(null);
   
   const [currentView, setCurrentView] = useState<'main' | 'detail'>('main');
-  const [activeAnimeId, setActiveAnimeId] = useState<string | null>(null); // To trigger detail fetch
+  const [activeAnimeId, setActiveAnimeId] = useState<string | null>(null);
 
   const placeholderPosterUrl = '/assest/placeholder-poster.png';
 
@@ -77,9 +73,11 @@ export default function HomePage() {
   const [topUpcomingAnime, setTopUpcomingAnime] = useState<Anime[]>([]);
   const [isLoadingLists, setIsLoadingLists] = useState(true);
 
+  // Load anime lists only when main view is active
   useEffect(() => {
     const loadAnimeLists = async () => {
       setIsLoadingLists(true);
+      // console.log("Fetching anime lists for main view");
       const [popular, airing, upcoming] = await Promise.all([
         getTopAnime(),
         getTopAiringAnime(),
@@ -90,17 +88,19 @@ export default function HomePage() {
       setTopUpcomingAnime(upcoming);
       setIsLoadingLists(false);
     };
-    // Load lists only when main view is active
+
     if (currentView === 'main') {
         loadAnimeLists();
     }
-  }, [currentView]); 
+  }, [currentView]); // Re-fetch lists if view changes to main
 
+  // Fetch anime details function (memoized with useCallback)
   const fetchAnimeDetails = useCallback(async (animeId: string) => {
     if (!animeId) return;
+    // console.log(`Fetching details for animeId in fetchAnimeDetails: ${animeId}`); // Debug
     setIsLoadingDetail(true);
     setDetailError(null);
-    setDetailedAnime(null); // Clear previous details
+    setDetailedAnime(null);
     window.scrollTo(0, 0);
     try {
       const response = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/full`);
@@ -117,50 +117,57 @@ export default function HomePage() {
     } finally {
       setIsLoadingDetail(false);
     }
-  }, []);
+  }, []); // Empty dependency array because it doesn't depend on component state/props directly
 
-
+  // Effect to handle URL hash changes and trigger detail fetch
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
+      // console.log("Hash changed to:", hash); // Debug
       if (hash.startsWith('#/anime/')) {
         const animeIdFromHash = hash.substring('#/anime/'.length);
         if (animeIdFromHash) {
-          if (animeIdFromHash !== activeAnimeId || currentView !== 'detail') { 
-            setActiveAnimeId(animeIdFromHash); 
+          // console.log(`Anime ID from hash: ${animeIdFromHash}, Current activeAnimeId: ${activeAnimeId}`); // Debug
+          if (animeIdFromHash !== activeAnimeId || currentView !== 'detail') {
+            setActiveAnimeId(animeIdFromHash); // This will trigger the next useEffect
             setCurrentView('detail');
           }
           setShowJikanPlaceholder(false); 
         } else { 
-          if (currentView !== 'main') { 
-            setCurrentView('main');
-            setActiveAnimeId(null);
-          }
+          // console.log("Invalid anime ID in hash, switching to main view"); // Debug
+          setCurrentView('main');
+          setActiveAnimeId(null);
         }
       } else { 
-        if (currentView !== 'main') { 
+        // console.log("No anime hash, switching to main view"); // Debug
+        if (currentView !== 'main') { // Only switch if not already main
             setCurrentView('main');
             setActiveAnimeId(null);
         }
-        if (!quoteItem && !isLoadingQuote) { 
+        // Show placeholder only if no quote action has happened yet on main view
+        if (!quoteItem && !isLoadingQuote && currentView === 'main') { 
             setShowJikanPlaceholder(true);
         }
       }
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); 
+    handleHashChange(); // Call on initial load to check current hash
 
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
+  // Dependencies: ensure this runs if activeAnimeId or currentView changes programmatically elsewhere,
+  // or if quoteItem/isLoadingQuote changes to correctly manage placeholder.
   }, [activeAnimeId, currentView, quoteItem, isLoadingQuote]); 
 
+  // Effect to fetch details when activeAnimeId is set and view is 'detail'
   useEffect(() => {
     if (currentView === 'detail' && activeAnimeId) {
+      // console.log(`Fetching details because activeAnimeId (${activeAnimeId}) or currentView (${currentView}) changed.`); // Debug
       fetchAnimeDetails(activeAnimeId);
     }
-  }, [activeAnimeId, currentView, fetchAnimeDetails]);
+  }, [activeAnimeId, currentView, fetchAnimeDetails]); // fetchAnimeDetails is memoized
 
 
   return (
@@ -208,14 +215,13 @@ export default function HomePage() {
         {currentView === 'detail' && activeAnimeId && (
           isLoadingDetail ? <p className={styles.pageMessage}>Loading anime details for ID: {activeAnimeId}...</p> :
           detailError ? <p className={`${styles.pageMessage} ${styles.errorText}`}>Error: {detailError}</p> :
-          detailedAnime ? <AnimeDetailView anime={detailedAnime} /> : <p className={`${styles.pageMessage} ${styles.infoText}`}>Anime details not found for ID: {activeAnimeId}. Please try again or go back.</p>
+          detailedAnime ? <AnimeDetailView anime={detailedAnime} /> : <p className={`${styles.pageMessage} ${styles.infoText}`}>Anime details not found for ID: {activeAnimeId}.</p>
         )}
          {currentView === 'detail' && !activeAnimeId && ( 
-            <p className={`${styles.pageMessage} ${styles.errorText}`}>No Anime ID specified. Please go back and select an anime.</p>
+            <p className={`${styles.pageMessage} ${styles.errorText}`}>No Anime ID specified for detail view.</p>
         )}
       </div>
     </>
   );
 }
 
-          
