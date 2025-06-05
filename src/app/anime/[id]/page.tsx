@@ -2,14 +2,13 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation'; // Next.js hook to get route parameters
-import AnimeDetailView from '@/components/AnimeDetailView';
-import { JikanAnimeFull } from '@/lib/types';
-import styles from './page.module.css'; // Styles for this specific page
+import { useParams } from 'next/navigation'; 
+import AnimeDetailView from '@/components/AnimeDetailView'; 
+import { JikanAnimeFull } from '@/lib/types'; 
+import styles from './page.module.css'; 
 
-export default function AnimeIdPage() { // Renamed component for clarity
+export default function AnimeIdPage() { 
   const params = useParams();
-  // params.id can be string or string[]. Ensure it's a string.
   const animeId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const [anime, setAnime] = useState<JikanAnimeFull | null>(null);
@@ -17,7 +16,7 @@ export default function AnimeIdPage() { // Renamed component for clarity
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (animeId && typeof animeId === 'string') { // Ensure animeId is a valid string
+    if (animeId && typeof animeId === 'string') { 
       const fetchAnimeDetails = async () => {
         setIsLoading(true);
         setError(null);
@@ -31,6 +30,7 @@ export default function AnimeIdPage() { // Renamed component for clarity
           }
           const data = await response.json();
           setAnime(data.data as JikanAnimeFull);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
           console.error("Error fetching anime details:", err);
           setError(err.message || "Failed to load anime details.");
@@ -39,16 +39,10 @@ export default function AnimeIdPage() { // Renamed component for clarity
         }
       };
       fetchAnimeDetails();
-    } else if (animeId) { // If animeId is defined but not a string (e.g. string[])
+    } else if (animeId) { 
         setError("Invalid Anime ID in URL.");
         setIsLoading(false);
-    } else { // If animeId is undefined
-        // This case should ideally not happen if routing is set up correctly and links are valid
-        // but as a fallback:
-        // setError("Anime ID not provided in URL.");
-        // setIsLoading(false);
-        // Or redirect to home, though that might cause a loop if this page is loaded by mistake
-    }
+    } 
   }, [animeId]);
 
   if (isLoading) {
@@ -56,7 +50,12 @@ export default function AnimeIdPage() { // Renamed component for clarity
   }
 
   if (error) {
-    return <div className={styles.pageContainer}><p className={`${styles.pageMessage} ${styles.errorText}`}>Error: {error}</p></div>;
+    return (
+      <div className={styles.pageContainer}>
+        <p className={`${styles.pageMessage} ${styles.errorText}`}>Error: {error}</p>
+        <button onClick={() => window.location.href = '/'} className="mt-4 py-2 px-4 bg-accent-color text-main-bg rounded">Go Home</button>
+      </div>
+    );
   }
 
   if (!anime) {

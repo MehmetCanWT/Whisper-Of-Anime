@@ -117,8 +117,12 @@ export interface AnimeSuggestion {
   };
 }
 
+// For full anime details page
 export interface JikanAnimeFull extends Anime {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   relations?: Array<any>; 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   external?: Array<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   streaming?: Array<any>;
 }
