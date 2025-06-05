@@ -126,23 +126,22 @@ export default function HomePage() {
       if (hash.startsWith('#/anime/')) {
         const animeIdFromHash = hash.substring('#/anime/'.length);
         if (animeIdFromHash) {
-          if (animeIdFromHash !== activeAnimeId || currentView !== 'detail') { // Fetch only if ID changed or view changes to detail
+          if (animeIdFromHash !== activeAnimeId || currentView !== 'detail') { 
             setActiveAnimeId(animeIdFromHash); 
             setCurrentView('detail');
           }
           setShowJikanPlaceholder(false); 
         } else { 
-          if (currentView !== 'main') { // If hash is just #/anime/ switch to main
+          if (currentView !== 'main') { 
             setCurrentView('main');
             setActiveAnimeId(null);
           }
         }
       } else { 
-        if (currentView !== 'main') { // If hash is not for anime, switch to main
+        if (currentView !== 'main') { 
             setCurrentView('main');
             setActiveAnimeId(null);
         }
-        // Manage placeholder visibility on main view
         if (!quoteItem && !isLoadingQuote) { 
             setShowJikanPlaceholder(true);
         }
@@ -150,15 +149,13 @@ export default function HomePage() {
     };
 
     window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Initial check on component mount
+    handleHashChange(); 
 
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
-  // Dependencies for hash change logic
   }, [activeAnimeId, currentView, quoteItem, isLoadingQuote]); 
 
-  // Fetch details when activeAnimeId is set AND currentView is 'detail'
   useEffect(() => {
     if (currentView === 'detail' && activeAnimeId) {
       fetchAnimeDetails(activeAnimeId);
@@ -221,3 +218,4 @@ export default function HomePage() {
   );
 }
 
+          
