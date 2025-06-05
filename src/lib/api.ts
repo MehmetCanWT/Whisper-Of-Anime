@@ -6,7 +6,7 @@ const JIKAN_API_BASE_URL = 'https://api.jikan.moe/v4';
 interface JikanResponse {
   data: Anime[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  pagination?: any; // Keeping this as any for now, as pagination structure might vary or not be strictly typed yet
+  pagination?: any; 
 }
 
 async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | null, limit: number = 15): Promise<Anime[]> {
@@ -16,13 +16,18 @@ async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | n
   }
   
   try {
-    const response = await fetch(url); 
+    // ISR için revalidate, API rotasının (örneğin /api/top-anime/route.ts) kendisinde ayarlanır.
+    // Buradaki fetch, Jikan'dan veriyi çekmek için standart bir fetch olmalı.
+    // Next.js'in fetch'i varsayılan olarak veriyi önbelleğe alabilir. 
+    // Her zaman Jikan'dan en taze veriyi çekmek için cache: 'no-store' kullanabiliriz.
+    const response = await fetch(url, { cache: 'no-store' }); 
+    
     if (!response.ok) {
       console.error(`Jikan API error for ${url}: ${response.status} - ${response.statusText}`);
-      // Try to parse error response from Jikan if available
-      const errorData = await response.json().catch(() => ({ message: "Failed to parse error response" }));
-      console.error("Error data from Jikan:", errorData);
-      return [];
+      const errorData = await response.json().catch(() => ({ message: "Failed to parse Jikan error response" }));
+      console.error("Jikan error data:", errorData);
+      // Propagate a more specific error or return empty
+      throw new Error(errorData.message || `Jikan API request failed with status ${response.status}`);
     }
     const data: JikanResponse = await response.json();
     
@@ -34,10 +39,9 @@ async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | n
     });
     return Array.from(uniqueAnimeMap.values()).slice(0, 12);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) { // Added type annotation for caught error
-    console.error(`Error fetching from Jikan (${url}):`, error.message || error);
-    return [];
+  } catch (error) {
+    console.error(`Error fetching from Jikan (${url}):`, error);
+    throw error; // Re-throw the error to be caught by the API route
   }
 }
 
@@ -46,11 +50,9 @@ export async function getTopAnime(): Promise<Anime[]> {
 }
 
 export async function getTopAiringAnime(): Promise<Anime[]> {
-  // Using /top/anime with filter=airing as it often gives more relevant "top" airing
   return fetchJikanEndpoint('/top/anime', 'airing');
 }
 
 export async function getTopUpcomingAnime(): Promise<Anime[]> {
-  // The /seasons/upcoming endpoint does not use the 'filter' query parameter
   return fetchJikanEndpoint('/seasons/upcoming', null); 
 }
