@@ -3,6 +3,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
+// TrailerImages importu kaldırıldı, çünkü Trailer tipi içindeki images alanı zaten TrailerImages tipinde olmalı.
+// Eğer Trailer tipi içinde images: TrailerImages şeklinde değilse, types.ts dosyasında bu düzeltilmeli.
+// Şimdilik, Trailer tipinin images alanını doğru içerdiğini varsayıyoruz.
 import { JikanAnimeFull, Trailer } from '@/lib/types'; 
 import styles from './AnimeDetailView.module.css'; 
 
@@ -13,7 +16,7 @@ interface Props {
 const AnimeDetailView: React.FC<Props> = ({ anime }) => {
   const placeholderPosterUrl = '/assest/placeholder-poster.png';
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
-  const [trailerKey, setTrailerKey] = useState(Date.now()); // Use a changing key for the iframe
+  const [trailerKey, setTrailerKey] = useState(0); 
   const [currentTrailerEmbedUrl, setCurrentTrailerEmbedUrl] = useState<string | null>(null);
 
   const allTagsRaw = [
@@ -23,15 +26,15 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
   ];
   const uniqueTags = Array.from(new Set(allTagsRaw.filter(tag => tag && tag.name).map(tag => tag.name)));
 
-  // Correctly try to get any available trailer image from the API response
-  const trailerThumbnailSrc = anime.trailer?.images?.maximum_image_url|| // Use maximum_image_url if available
-                            (anime.trailer?.images as any)?.image_url || // Fallback if a simple image_url exists
-                            null; 
+  // Corrected trailerThumbnailSrc logic
+  const trailerThumbnailSrc = anime.trailer?.images?.maximum_image_url || 
+                              (anime.trailer?.images as any)?.image_url || // Keep as last resort, ideally type TrailerImages fully
+                              null; 
 
-  const getPreparedEmbedUrl = useCallback((trailer: Trailer | undefined | null, enableAutoplay: boolean): string | null => {
-    let embedUrlString = trailer?.embed_url;
-    if (!embedUrlString && trailer?.youtube_id) {
-        embedUrlString = `https://www.youtube.com/embed/${trailer.youtube_id}`;
+  const getPreparedEmbedUrl = useCallback((trailerItem: Trailer | undefined | null, enableAutoplay: boolean): string | null => {
+    let embedUrlString = trailerItem?.embed_url;
+    if (!embedUrlString && trailerItem?.youtube_id) {
+        embedUrlString = `https://www.youtube.com/embed/${trailerItem.youtube_id}`;
     }
 
     if (embedUrlString) {
@@ -39,7 +42,6 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
         const url = new URL(embedUrlString);
         if (enableAutoplay) {
             url.searchParams.set('autoplay', '1');
-            url.searchParams.set('mute', '0'); // Explicitly set mute to 0 if autoplay needs sound, or 1 if it needs to be muted to autoplay
         } else {
             url.searchParams.delete('autoplay'); 
         }
@@ -48,23 +50,24 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
             url.searchParams.set('origin', window.location.origin);
         }
         return url.toString();
-      } catch (e) {
-        console.error("Invalid embed URL in getPreparedEmbedUrl:", embedUrlString, e);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) { // Explicitly typed 'e' as any to satisfy ESLint for now
+        console.error("Invalid embed URL:", embedUrlString, e.message);
         return null; 
       }
     }
     return null;
   }, []);
   
-  const canDisplayTrailerThumbnail = !!trailerThumbnailSrc;
-  const canOpenModalForTrailer = !!getPreparedEmbedUrl(anime.trailer, false); // Check if a base embed URL can be formed
+  // const canDisplayTrailerThumbnail = !!trailerThumbnailSrc; // Removed as unused
+  const canOpenModalForTrailer = !!getPreparedEmbedUrl(anime.trailer, false); 
   const canOpenTrailerLinkDirectly = !!(anime.trailer?.url && !canOpenModalForTrailer);
 
   const openTrailer = () => {
     const urlWithAutoplay = getPreparedEmbedUrl(anime.trailer, true);
     if (urlWithAutoplay) { 
       setCurrentTrailerEmbedUrl(urlWithAutoplay); 
-      setTrailerKey(Date.now()); // Update key to force iframe re-mount
+      setTrailerKey(prevKey => prevKey + 1); 
       setIsTrailerModalOpen(true);
     } else if (anime.trailer?.url) { 
       window.open(anime.trailer.url, '_blank');
@@ -73,8 +76,6 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
 
   const closeTrailerModal = useCallback(() => {
     setIsTrailerModalOpen(false);
-    // Setting src to null or a non-autoplay URL on close helps stop the video
-    // The iframe will be re-created with a new key and autoplay URL when opened again
     setCurrentTrailerEmbedUrl(null); 
   }, []); 
   
@@ -133,7 +134,7 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
               </div>
             </div>
           )}
-          {!trailerThumbnailSrc && canOpenModalForTrailer && (
+          {((canOpenModalForTrailer && !trailerThumbnailSrc) || canOpenTrailerLinkDirectly) && (
                <button onClick={openTrailer} className={styles.watchTrailerButton}>
                    Watch Trailer
                </button>
@@ -229,12 +230,12 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
       </div>
 
       {isTrailerModalOpen && currentTrailerEmbedUrl && (
-        <div className={`${styles.trailerModalOverlay} ${styles.open}`} onClick={closeTrailerModal}>
+        <div className={`${styles.trailerModalOverlay} ${isTrailerModalOpen ? styles.open : ''}`} onClick={closeTrailerModal}>
           <div className={styles.trailerModalContent} onClick={(e) => e.stopPropagation()}>
             <button className={styles.trailerModalCloseButton} onClick={closeTrailerModal} aria-label="Close trailer">×</button>
             <div className={styles.videoResponsiveModal}>
               <iframe
-                key={trailerKey} // Force re-render when key changes
+                key={trailerKey} 
                 src={currentTrailerEmbedUrl} 
                 title="Anime Trailer"
                 frameBorder="0"
