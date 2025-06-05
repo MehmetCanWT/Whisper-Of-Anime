@@ -34,13 +34,12 @@
 .posterImage {
   width: 100%;
   border-radius: 6px;
-  /* border: 1px solid var(--border-color); CSS'ten kaldırıldı, Image bileşeni zaten kenarlıklı */
+  /* border: 1px solid var(--border-color); Replaced by Image component styling if needed */
   background-color: var(--card-bg);
   margin-bottom: 15px;
   display: block;
 }
 
-/* === TRAILER STYLES START === */
 .trailerThumbnailContainer {
   position: relative;
   cursor: pointer;
@@ -51,15 +50,12 @@
   border: 1px solid var(--border-color);
   display: block;
   width: 100%;
-  height: 30%; /* Full height for the container */
-  /* padding-bottom: 56.25%; Replaced by direct img styling or fixed height */
-  min-height: 100px; /* Minimum height for the container */
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio for the thumbnail area */
+  height: 0; /* Required for padding-bottom trick */
   background-color: var(--card-bg); /* Placeholder background */
 }
 
 .trailerThumbnail {
-  /* If using layout="fill" on Next/Image, these styles apply to the Image component itself if needed,
-     or ensure the parent .trailerThumbnailContainer has aspect ratio defined. */
   position: absolute;
   top: 0;
   left: 0;
@@ -90,10 +86,10 @@
   width: 30px;
   height: 30px;
   fill: white;
-  margin-left: 3px; /* Visual centering for play icon triangle */
+  margin-left: 3px; 
 }
 
-.watchTrailerButton { /* Fallback if no thumbnail */
+.watchTrailerButton { 
   display: inline-block;
   background-color: var(--accent-color);
   color: var(--main-bg);
@@ -110,86 +106,6 @@
 .watchTrailerButton:hover {
   background-color: var(--accent-hover);
 }
-
-/* Trailer Modal Styles */
-.trailerModalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.85); /* Slightly more opaque */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001; 
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
-}
-.trailerModalOverlay.open {
-  opacity: 1;
-  visibility: visible;
-  transition: opacity 0.3s ease, visibility 0s linear 0s;
-}
-
-.trailerModalContent {
-  position: relative;
-  background-color: var(--main-bg);
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-  width: 90%;
-  max-width: 800px; 
-  transform: scale(0.9);
-  transition: transform 0.3s ease;
-}
-.trailerModalOverlay.open .trailerModalContent {
-    transform: scale(1);
-}
-
-
-.trailerModalCloseButton {
-  position: absolute;
-  top: -15px; /* Position outside slightly, adjust as needed */
-  right: -15px;
-  background-color: var(--accent-color);
-  color: var(--main-bg);
-  border: 2px solid var(--main-bg); /* Border to make it pop from modal */
-  border-radius: 50%;
-  width: 34px; /* Slightly larger */
-  height: 34px;
-  font-size: 1.4rem; /* Larger X */
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-}
- .trailerModalCloseButton:hover {
-    background-color: var(--accent-hover);
- }
-
-.videoResponsiveModal {
-  overflow: hidden;
-  padding-bottom: 56.25%; 
-  position: relative;
-  height: 0;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  background-color: #000; /* Black background for video area */
-}
-
-.videoResponsiveModal iframe {
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 100%;
-  position: absolute;
-}
-/* === TRAILER STYLES END === */
 
 .infoArea {
   flex-grow: 1;
@@ -342,6 +258,85 @@
   font-size: 0.75rem; 
 }
  
+/* Trailer Modal Styles */
+.trailerModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050; /* Ensure it's above other content */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+.trailerModalOverlay.open { /* Class to control visibility */
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
+
+.trailerModalContent {
+  position: relative;
+  background-color: var(--main-bg); /* Match site background */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.7);
+  width: 90vw; /* Responsive width */
+  max-width: 800px; /* Max width for the video player */
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+.trailerModalOverlay.open .trailerModalContent {
+    transform: scale(1);
+}
+
+.trailerModalCloseButton {
+  position: absolute;
+  top: -15px; 
+  right: -15px;
+  background-color: var(--accent-color);
+  color: var(--main-bg);
+  border: 2px solid var(--main-bg);
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  z-index: 10; /* Ensure button is above video */
+}
+ .trailerModalCloseButton:hover {
+    background-color: var(--accent-hover);
+ }
+
+.videoResponsiveModal {
+  overflow: hidden;
+  padding-bottom: 56.25%; 
+  position: relative;
+  height: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: #000; 
+}
+
+.videoResponsiveModal iframe {
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+}
+
 @media (max-width: 768px) {
   .title {
     font-size: 1.7rem;
@@ -350,11 +345,11 @@
     font-size: 0.9rem;
   }
   .trailerModalContent {
-    width: 95%;
+    width: 95vw; /* Use viewport width for smaller screens */
     padding: 15px;
   }
   .trailerModalCloseButton {
-    top: 5px;
+    top: 5px; /* Adjust close button for smaller screens */
     right: 5px;
     width: 28px;
     height: 28px;

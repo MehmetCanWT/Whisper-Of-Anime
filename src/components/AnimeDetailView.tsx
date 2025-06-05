@@ -13,10 +13,8 @@ interface Props {
 const AnimeDetailView: React.FC<Props> = ({ anime }) => {
   const placeholderPosterUrl = '/assest/placeholder-poster.png';
   const [isTrailerModalOpen, setIsTrailerModalOpen] = useState(false);
-  // trailerKey state'i, iframe'in src'si değişmese bile yeniden render edilmesini zorlamak için.
   const [trailerKey, setTrailerKey] = useState(0); 
-  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(null);
-
+  const [currentTrailerSrc, setCurrentTrailerSrc] = useState<string | null>(null);
 
   const allTagsRaw = [
     ...(anime.genres || []),
@@ -30,9 +28,8 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
                             anime.trailer?.images?.default_image_url || 
                             null; 
 
-  const getEmbedUrlWithAutoplay = (trailer: Trailer | undefined | null): string | null => {
+  const getPreparedEmbedUrl = useCallback((trailer: Trailer | undefined | null, enableAutoplay: boolean): string | null => {
     let embedUrlString = trailer?.embed_url;
-    // Jikan API bazen embed_url'yi doğrudan vermez, youtube_id'den oluşturmak gerekebilir.
     if (!embedUrlString && trailer?.youtube_id) {
         embedUrlString = `https://www.youtube.com/embed/${trailer.youtube_id}`;
     }
@@ -40,44 +37,46 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
     if (embedUrlString) {
       try {
         const url = new URL(embedUrlString);
-        url.searchParams.set('autoplay', '1'); // Autoplay'i etkinleştir
-        url.searchParams.set('enablejsapi', '1'); // JavaScript API'sini etkinleştir
+        if (enableAutoplay) {
+            url.searchParams.set('autoplay', '1');
+        } else {
+            // Ensure autoplay is explicitly off if not intended for this call
+            url.searchParams.set('autoplay', '0'); 
+        }
+        url.searchParams.set('enablejsapi', '1'); 
         if (typeof window !== 'undefined' && !url.searchParams.has('origin')) {
             url.searchParams.set('origin', window.location.origin);
         }
         return url.toString();
       } catch (e) {
-        console.error("Invalid embed URL:", embedUrlString, e);
+        // console.error("Invalid embed URL in getPreparedEmbedUrl:", embedUrlString, e);
         return null; 
       }
     }
     return null;
-  };
+  }, []); // No dependencies, it's a pure function of its arguments
   
   const canDisplayTrailerThumbnail = !!trailerThumbnailSrc;
-  // Modalın açılıp açılamayacağını kontrol et (embed_url veya youtube_id var mı?)
-  const canOpenModalForTrailer = !!(anime.trailer?.embed_url || anime.trailer?.youtube_id);
-  // Sadece link olarak açılacak mı? (Modal açılamıyorsa ama normal URL varsa)
+  const canOpenModalForTrailer = !!getPreparedEmbedUrl(anime.trailer, false);
   const canOpenTrailerLinkDirectly = !!(anime.trailer?.url && !canOpenModalForTrailer);
 
-
   const openTrailer = () => {
-    const urlWithAutoplay = getEmbedUrlWithAutoplay(anime.trailer);
+    const urlWithAutoplay = getPreparedEmbedUrl(anime.trailer, true);
     if (urlWithAutoplay) { 
-      setCurrentTrailerUrl(urlWithAutoplay); // Set the URL that will be used by iframe
-      setTrailerKey(prevKey => prevKey + 1); // Increment key to force iframe re-mount
+      setCurrentTrailerSrc(urlWithAutoplay); 
+      setTrailerKey(prevKey => prevKey + 1); 
       setIsTrailerModalOpen(true);
-    } else if (anime.trailer?.url) { // Fallback to opening YouTube link in new tab
+    } else if (anime.trailer?.url) { 
       window.open(anime.trailer.url, '_blank');
     }
   };
 
   const closeTrailerModal = useCallback(() => {
     setIsTrailerModalOpen(false);
-    // Opsiyonel: iframe src'sini null yaparak videoyu durdurmayı deneyebilirsiniz,
-    // ancak key değişikliği genellikle yeterlidir.
-    // setCurrentTrailerUrl(null); 
-  }, []); 
+    // When modal closes, set src to a non-autoplay version or null to stop video.
+    // The key change for the next open will ensure autoplay=1 is effective.
+    setCurrentTrailerSrc(getPreparedEmbedUrl(anime.trailer, false)); 
+  }, [anime.trailer, getPreparedEmbedUrl]); 
   
   useEffect(() => {
     const handleEscapeKey = (event: KeyboardEvent) => {
@@ -93,6 +92,18 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
     };
   }, [isTrailerModalOpen, closeTrailerModal]);
 
+  // Effect to handle body overflow when modal is open
+  useEffect(() => {
+    if (isTrailerModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto'; // Cleanup on unmount
+    };
+  }, [isTrailerModalOpen]);
+
 
   return (
     <>
@@ -107,8 +118,7 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
             style={{ objectFit: 'cover' }} 
             priority
           />
-          {/* Trailer Display Logic */}
-          {(canOpenModalForTrailer && trailerThumbnailSrc) && ( // Show thumbnail if modal can be opened and thumbnail exists
+          {(canOpenModalForTrailer && trailerThumbnailSrc) && (
              <div 
               className={styles.trailerThumbnailContainer}
               onClick={openTrailer}
@@ -131,8 +141,7 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
               </div>
             </div>
           )}
-          {/* Fallback "Watch Trailer" button if modal can be opened but no thumbnail, or if only direct link exists */}
-          {((canOpenModalForTrailer && !trailerThumbnailSrc) || canOpenTrailerLinkDirectly) && (
+          {!trailerThumbnailSrc && canOpenModalForTrailer && (
                <button onClick={openTrailer} className={styles.watchTrailerButton}>
                    Watch Trailer
                </button>
@@ -228,14 +237,14 @@ const AnimeDetailView: React.FC<Props> = ({ anime }) => {
       </div>
 
       {/* Trailer Modal */}
-      {isTrailerModalOpen && currentTrailerUrl && ( // Check currentTrailerUrl before rendering iframe
-        <div className={styles.trailerModalOverlay} onClick={closeTrailerModal}>
+      {isTrailerModalOpen && currentTrailerSrc && (
+        <div className={`${styles.trailerModalOverlay} ${isTrailerModalOpen ? styles.open : ''}`} onClick={closeTrailerModal}>
           <div className={styles.trailerModalContent} onClick={(e) => e.stopPropagation()}>
             <button className={styles.trailerModalCloseButton} onClick={closeTrailerModal} aria-label="Close trailer">×</button>
             <div className={styles.videoResponsiveModal}>
               <iframe
-                key={trailerKey} // Force re-render when key changes
-                src={currentTrailerUrl} // Use the state that includes autoplay=1
+                key={trailerKey} 
+                src={currentTrailerSrc} 
                 title="Anime Trailer"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

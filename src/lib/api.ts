@@ -2,6 +2,8 @@
 import { Anime } from './types';
 
 const JIKAN_API_BASE_URL = 'https://api.jikan.moe/v4';
+const MAX_RETRIES = 2; // Reduced max retries
+const RETRY_DELAY_MS = 1500; // Increased delay
 
 interface JikanResponse {
   data: Anime[];
@@ -9,24 +11,33 @@ interface JikanResponse {
   pagination?: any; 
 }
 
-async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | null, limit: number = 15): Promise<Anime[]> {
+// This function will be used by our server-side API routes
+export async function fetchDirectlyFromJikan(
+  baseEndpoint: string, 
+  filterParam?: string | null, 
+  limit: number = 15,
+  retries: number = MAX_RETRIES 
+): Promise<Anime[]> {
   let url = `${JIKAN_API_BASE_URL}${baseEndpoint}?limit=${limit}&sfw=true`;
   if (filterParam && baseEndpoint === '/top/anime') {
     url += `&filter=${filterParam}`;
   }
   
   try {
-    // ISR için revalidate, API rotasının (örneğin /api/top-anime/route.ts) kendisinde ayarlanır.
-    // Buradaki fetch, Jikan'dan veriyi çekmek için standart bir fetch olmalı.
-    // Next.js'in fetch'i varsayılan olarak veriyi önbelleğe alabilir. 
-    // Her zaman Jikan'dan en taze veriyi çekmek için cache: 'no-store' kullanabiliriz.
+    // console.log(`Fetching (lib/api) URL (Attempt ${MAX_RETRIES - retries + 1}): ${url}`);
+    // When called from API routes, Next.js fetch's default caching can be leveraged by the route's revalidate.
+    // Using { cache: 'no-store' } here ensures our API route always tries to get fresh data from Jikan,
+    // and then our API route itself is cached by Next.js.
     const response = await fetch(url, { cache: 'no-store' }); 
     
     if (!response.ok) {
-      console.error(`Jikan API error for ${url}: ${response.status} - ${response.statusText}`);
-      const errorData = await response.json().catch(() => ({ message: "Failed to parse Jikan error response" }));
-      console.error("Jikan error data:", errorData);
-      // Propagate a more specific error or return empty
+      if ((response.status === 429 || response.status >= 500) && retries > 0) {
+        console.warn(`Retrying Jikan API (lib/api) for ${url} (${retries} retries left) after ${RETRY_DELAY_MS}ms. Status: ${response.status}`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+        return fetchDirectlyFromJikan(baseEndpoint, filterParam, limit, retries - 1);
+      }
+      const errorData = await response.json().catch(() => ({ message: `Jikan API request failed with status ${response.status}` }));
+      console.error(`Jikan API error (lib/api) for ${url}:`, errorData);
       throw new Error(errorData.message || `Jikan API request failed with status ${response.status}`);
     }
     const data: JikanResponse = await response.json();
@@ -40,19 +51,20 @@ async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | n
     return Array.from(uniqueAnimeMap.values()).slice(0, 12);
 
   } catch (error) {
-    console.error(`Error fetching from Jikan (${url}):`, error);
-    throw error; // Re-throw the error to be caught by the API route
+    console.error(`Error in fetchDirectlyFromJikan (${url}) after all retries:`, error);
+    throw error; // Re-throw to be handled by the API route
   }
 }
 
+// These functions are now primarily for organizing the calls within API routes
 export async function getTopAnime(): Promise<Anime[]> {
-  return fetchJikanEndpoint('/top/anime', null);
+  return fetchDirectlyFromJikan('/top/anime', null);
 }
 
 export async function getTopAiringAnime(): Promise<Anime[]> {
-  return fetchJikanEndpoint('/top/anime', 'airing');
+  return fetchDirectlyFromJikan('/top/anime', 'airing');
 }
 
 export async function getTopUpcomingAnime(): Promise<Anime[]> {
-  return fetchJikanEndpoint('/seasons/upcoming', null); 
+  return fetchDirectlyFromJikan('/seasons/upcoming', null); 
 }
