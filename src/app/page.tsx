@@ -1,207 +1,48 @@
 // src/app/page.tsx
-"use client";
+// This is now primarily a Server Component for fetching list data with ISR
 
-import { useEffect, useState, useCallback } from 'react';
-import JikanPlaceholder from '@/components/JikanPlaceholder';
-import AnimeApiContent from '@/components/AnimeApiContent';
-import QuoteDisplay from '@/components/QuoteDisplay';
 import AnimeListSection from '@/components/AnimeListSection';
-import AnimeDetailView from '@/components/AnimeDetailView'; 
-import { QuoteItem, AnimeInfoForQuote, JikanAnimeFull, Anime } from '@/lib/types';
-import { getTopAnime, getTopAiringAnime, getTopUpcomingAnime } from '@/lib/api'; 
+import ClientQuoteSection from '@/components/ClientQuoteSection'; // New Client Component
+import { getTopAnime, getTopAiringAnime, getTopUpcomingAnime } from '@/lib/api';
+import { Anime } from '@/lib/types';
 import styles from './page.module.css';
 
-export default function HomePage() {
-  const [quoteItem, setQuoteItem] = useState<QuoteItem | null>(null);
-  const [currentAnimeForQuote, setCurrentAnimeForQuote] = useState<AnimeInfoForQuote | null>(null);
-  const [isLoadingQuote, setIsLoadingQuote] = useState(false); 
-  const [showJikanPlaceholder, setShowJikanPlaceholder] = useState(true);
+// Revalidate data for these lists every 1 hour (3600 seconds)
+export const revalidate = 3600;
 
-  const [detailedAnime, setDetailedAnime] = useState<JikanAnimeFull | null>(null);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-  const [detailError, setDetailError] = useState<string | null>(null);
-  
-  const [currentView, setCurrentView] = useState<'main' | 'detail'>('main');
-  const [activeAnimeId, setActiveAnimeId] = useState<string | null>(null); 
-
-  const [topAnime, setTopAnime] = useState<Anime[]>([]);
-  const [topAiringAnime, setTopAiringAnime] = useState<Anime[]>([]);
-  const [topUpcomingAnime, setTopUpcomingAnime] = useState<Anime[]>([]);
-  const [isLoadingLists, setIsLoadingLists] = useState(true);
-
-  const placeholderPosterUrl = '/assest/placeholder-poster.png';
-
-  const fetchQuoteAndAnimeInfo = async () => {
-    setShowJikanPlaceholder(false); 
-    setIsLoadingQuote(true);       
-    setCurrentAnimeForQuote(null); 
-    setQuoteItem(null);            
-    
-    try {
-      const quoteResponse = await fetch('https://yurippe.vercel.app/api/quotes?random=1');
-      if (!quoteResponse.ok) throw new Error(`Yurippe API error: ${quoteResponse.status}`);
-      const quoteData = await quoteResponse.json();
-      const newQuoteItem = quoteData[0] as QuoteItem;
-      setQuoteItem(newQuoteItem);
-
-      if (newQuoteItem?.show) {
-        try {
-          const cleanedShowName = newQuoteItem.show.replace(/\//g, ' ');
-          const jikanResponse = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(cleanedShowName)}&limit=1&sfw=true`);
-          if (!jikanResponse.ok) throw new Error(`Jikan API error: ${jikanResponse.status}`);
-          const jikanData = await jikanResponse.json();
-          if (jikanData.data && jikanData.data.length > 0) {
-            setCurrentAnimeForQuote(jikanData.data[0] as AnimeInfoForQuote);
-          } else {
-            setCurrentAnimeForQuote(null); 
-          }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (jikanError: any) {
-          console.error("Jikan API error for quote section:", jikanError);
-          setCurrentAnimeForQuote(null);
-        }
-      } else {
-        setCurrentAnimeForQuote(null);
-      }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      console.error("Error fetching quote:", error);
-      setQuoteItem({ quote: "Could not load quote.", character: "Error", show: "Unknown" });
-      setCurrentAnimeForQuote(null);
-    } finally {
-      setIsLoadingQuote(false);
-    }
-  };
-  
-  useEffect(() => {
-    const loadAnimeLists = async () => {
-      setIsLoadingLists(true);
-      const [popular, airing, upcoming] = await Promise.all([
-        getTopAnime(),
-        getTopAiringAnime(),
-        getTopUpcomingAnime()
-      ]);
-      setTopAnime(popular);
-      setTopAiringAnime(airing);
-      setTopUpcomingAnime(upcoming);
-      setIsLoadingLists(false);
-    };
-
-    if (currentView === 'main') {
-      loadAnimeLists();
-    }
-  }, [currentView]); 
-
-  const fetchAnimeDetails = useCallback(async (animeId: string) => {
-    if (!animeId) return;
-    setIsLoadingDetail(true);
-    setDetailError(null);
-    setDetailedAnime(null);
-    window.scrollTo(0, 0);
-    try {
-      const response = await fetch(`https://api.jikan.moe/v4/anime/${animeId}/full`);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-        throw new Error(errorData.message || `API error: ${response.status}`);
-      }
-      const data = await response.json();
-      setDetailedAnime(data.data as JikanAnimeFull);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error("Error fetching anime details:", err);
-      setDetailError(err.message || "Failed to load anime details.");
-    } finally {
-      setIsLoadingDetail(false);
-    }
-  }, []);
-
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash.startsWith('#/anime/')) {
-        const animeIdFromHash = hash.substring('#/anime/'.length);
-        if (animeIdFromHash) {
-          if (animeIdFromHash !== activeAnimeId) {
-            setActiveAnimeId(animeIdFromHash); 
-          }
-          setCurrentView('detail');
-          setShowJikanPlaceholder(false); 
-        } else { 
-          setCurrentView('main');
-          setActiveAnimeId(null);
-        }
-      } else { 
-        setCurrentView('main');
-        setActiveAnimeId(null);
-        if (!quoteItem && !isLoadingQuote) { 
-            setShowJikanPlaceholder(true);
-        }
-      }
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); 
-
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, [activeAnimeId, quoteItem, isLoadingQuote]); 
-
-  useEffect(() => {
-    if (currentView === 'detail' && activeAnimeId) {
-      fetchAnimeDetails(activeAnimeId);
-    }
-  }, [activeAnimeId, currentView, fetchAnimeDetails]);
-
+export default async function HomePage() {
+  // Fetch data for the lists on the server at build time or revalidation
+  const topAnimeData: Anime[] = await getTopAnime();
+  const topAiringAnimeData: Anime[] = await getTopAiringAnime();
+  const topUpcomingAnimeData: Anime[] = await getTopUpcomingAnime();
 
   return (
+    // The main-view and detail-view toggling will be handled by ClientQuoteSection
+    // or by Next.js routing if we switch to /anime/[id] for detail pages later.
+    // For now, ClientQuoteSection will manage its internal views.
     <>
-      <div id="main-view" style={{ display: currentView === 'main' ? 'flex' : 'none' }} className={`${styles.mainViewContainer} w-full flex-col items-center`}>
-        <main className={styles.quoteBox} role="main" aria-label="Anime quote generator">
-          <div className={styles.quoteContainer}>
-            <div className={styles.animeInfo} aria-label="Anime information">
-              {showJikanPlaceholder ? (
-                <JikanPlaceholder />
-              ) : (
-                <AnimeApiContent 
-                  anime={currentAnimeForQuote} 
-                  showNameFromQuoteApi={quoteItem?.show || (isLoadingQuote ? "" : "Unknown")} 
-                  placeholderPosterUrl={placeholderPosterUrl}
-                  isLoading={isLoadingQuote}
-                />
-              )}
-            </div>
-
-            <div className={styles.quoteText}>
-              <QuoteDisplay 
-                quote={quoteItem?.quote || (showJikanPlaceholder ? "Click the button to get a quote." : (isLoadingQuote ? "Loading quote..." : "Quote not found."))} 
-                author={quoteItem?.character || ""} 
-              />
-              <button 
-                onClick={fetchQuoteAndAnimeInfo} 
-                aria-label="Generate new anime quote"
-                className={styles.newQuoteButton}
-              >
-                New Quote
-              </button>
-            </div>
-          </div>
-        </main>
-
-        <div className={`${styles.moreAnimeSections} w-full`}>
-          <AnimeListSection listId="top-anime-grid" title="Most Popular Anime" initialAnimeList={topAnime} isLoading={isLoadingLists} errorText="Most popular anime could not be loaded." />
-          <AnimeListSection listId="top-airing-grid" title="Top Airing Anime" initialAnimeList={topAiringAnime} isLoading={isLoadingLists} errorText="Top airing anime could not be loaded." />
-          <AnimeListSection listId="top-upcoming-grid" title="Top Upcoming Anime" initialAnimeList={topUpcomingAnime} isLoading={isLoadingLists} errorText="Top upcoming anime could not be loaded." />
-        </div>
-      </div>
-
-      <div id="detail-view" style={{ display: currentView === 'detail' ? 'block' : 'none' }} className={`${styles.detailViewContainer} w-full`}> 
-        {currentView === 'detail' && activeAnimeId && (
-          isLoadingDetail ? <p className={styles.pageMessage}>Loading anime details...</p> :
-          detailError ? <p className={`${styles.pageMessage} ${styles.errorText}`}>Error: {detailError}</p> :
-          detailedAnime ? <AnimeDetailView anime={detailedAnime} /> : <p className={`${styles.pageMessage} ${styles.infoText}`}>Anime details not found for ID: {activeAnimeId}</p>
-        )}
+      <ClientQuoteSection /> {/* Contains quote logic, Jikan placeholder, and detail view toggling */}
+      
+      <div className={`${styles.moreAnimeSections} w-full`}>
+        <AnimeListSection 
+          listId="top-anime-grid" 
+          title="Most Popular Anime" 
+          initialAnimeList={topAnimeData} 
+          // isLoading is no longer needed here as data is pre-fetched or handled by Suspense
+          errorText="Most popular anime could not be loaded." 
+        />
+        <AnimeListSection 
+          listId="top-airing-grid" 
+          title="Top Airing Anime" 
+          initialAnimeList={topAiringAnimeData} 
+          errorText="Top airing anime could not be loaded." 
+        />
+        <AnimeListSection 
+          listId="top-upcoming-grid" 
+          title="Top Upcoming Anime" 
+          initialAnimeList={topUpcomingAnimeData} 
+          errorText="Top upcoming anime could not be loaded." 
+        />
       </div>
     </>
   );

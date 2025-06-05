@@ -1,5 +1,5 @@
 // src/lib/api.ts
-import { Anime } from './types'; 
+import { Anime } from './types';
 
 const JIKAN_API_BASE_URL = 'https://api.jikan.moe/v4';
 
@@ -9,15 +9,19 @@ interface JikanResponse {
   pagination?: any; 
 }
 
-async function fetchJikanEndpoint(endpoint: string, limit: number = 15): Promise<Anime[]> {
-  const url = `${JIKAN_API_BASE_URL}${endpoint}?limit=${limit}&sfw=true`;
+async function fetchJikanEndpoint(baseEndpoint: string, filterParam?: string | null, limit: number = 15): Promise<Anime[]> {
+  let url = `${JIKAN_API_BASE_URL}${baseEndpoint}?limit=${limit}&sfw=true`;
+  if (filterParam && baseEndpoint === '/top/anime') {
+    url += `&filter=${filterParam}`;
+  }
+  
   try {
-    const response = await fetch(url, { next: { revalidate: 3600 } }); 
+    const response = await fetch(url); 
     if (!response.ok) {
       console.error(`Jikan API error for ${url}: ${response.status} - ${response.statusText}`);
       const errorData = await response.json().catch(() => ({}));
       console.error("Error data:", errorData);
-      return []; 
+      return [];
     }
     const data: JikanResponse = await response.json();
     
@@ -27,7 +31,7 @@ async function fetchJikanEndpoint(endpoint: string, limit: number = 15): Promise
         uniqueAnimeMap.set(anime.mal_id, anime);
       }
     });
-    return Array.from(uniqueAnimeMap.values()).slice(0, 12); 
+    return Array.from(uniqueAnimeMap.values()).slice(0, 12);
 
   } catch (error) {
     console.error(`Error fetching from Jikan (${url}):`, error);
@@ -36,13 +40,13 @@ async function fetchJikanEndpoint(endpoint: string, limit: number = 15): Promise
 }
 
 export async function getTopAnime(): Promise<Anime[]> {
-  return fetchJikanEndpoint('/top/anime');
+  return fetchJikanEndpoint('/top/anime', null);
 }
 
 export async function getTopAiringAnime(): Promise<Anime[]> {
-  return fetchJikanEndpoint('/top/anime', 15);
+  return fetchJikanEndpoint('/top/anime', 'airing');
 }
 
 export async function getTopUpcomingAnime(): Promise<Anime[]> {
-  return fetchJikanEndpoint('/seasons/upcoming');
+  return fetchJikanEndpoint('/seasons/upcoming', null); 
 }
