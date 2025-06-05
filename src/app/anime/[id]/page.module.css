@@ -1,0 +1,26 @@
+/* src/app/anime/[id]/page.module.css */
+.pageContainer {
+  width: 100%;
+  max-width: 1100px; /* Consistent with other main content blocks */
+  padding: 20px; /* Add padding around the detail view content */
+  box-sizing: border-box;
+  margin: 0 auto 30px auto; /* Center the content */
+  color: var(--text-primary);
+}
+
+.loadingText,
+.errorText,
+.infoText {
+  text-align: center;
+  padding: 50px 20px;
+  font-family: var(--font-rubik);
+  font-size: 1.1rem;
+}
+
+.errorText {
+  color: #ff6b6b; /* A red color for errors */
+}
+
+.infoText {
+  color: var(--text-secondary);
+}

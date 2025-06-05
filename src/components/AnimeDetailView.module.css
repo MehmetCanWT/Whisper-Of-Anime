@@ -1,0 +1,343 @@
+    /* src/components/AnimeDetailView.module.css */
+    .detailContainer {
+      background-color: var(--content-bg);
+      padding: 25px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column; 
+      gap: 30px;
+      color: var(--text-primary);
+    }
+
+    @media (min-width: 768px) { 
+      .detailContainer {
+        flex-direction: row; 
+      }
+    }
+
+    .posterArea {
+      flex-shrink: 0;
+      width: 100%; 
+      max-width: 300px; 
+      margin: 0 auto; 
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      .posterArea {
+        width: 300px;
+        margin: 0; 
+      }
+    }
+
+    .posterImage {
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .trailerThumbnailContainer {
+        position: relative;
+        cursor: pointer;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--border-color); /* Keep border for the container */
+        display: block;
+        width: 100%;
+        background-color: var(--card-bg); /* Placeholder background */
+    }
+
+    .trailerThumbnail {
+        display: block;
+        width: 100%;
+        height: auto; 
+        max-height: 169px; /* Approx 16:9 for 300px width, adjust as needed */
+        object-fit: cover; 
+    }
+
+    .trailerPlayButton {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.65);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+        border: none;
+    }
+    .trailerPlayButton:hover {
+        background-color: rgba(0, 0, 0, 0.85);
+    }
+    .trailerPlayButton svg {
+        width: 30px;
+        height: 30px;
+        fill: white;
+        margin-left: 3px; 
+    }
+
+    .infoArea {
+      flex-grow: 1;
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column; 
+      gap: 10px;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+
+    @media (min-width: 640px) { 
+        .header {
+            flex-direction: row; 
+            align-items: center; 
+        }
+    }
+
+    .titleGroup {
+      flex-grow: 1;
+    }
+
+    .title {
+      font-family: var(--font-rubik);
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--title-color);
+      margin-top: 0;
+      margin-bottom: 2px;
+      line-height: 1.2;
+    }
+
+    .titleJapanese {
+      font-size: 1rem;
+      color: var(--text-secondary);
+      margin-bottom: 15px;
+      font-family: var(--font-rubik);
+    }
+
+    .malLinkContainer {
+      margin-left: 0; 
+      flex-shrink: 0; 
+    }
+    @media (min-width: 640px) {
+        .malLinkContainer {
+            margin-left: 20px;
+        }
+    }
+
+
+    .malLink {
+      display: inline-block;
+      background-color: var(--mal-link-bg);
+      color: var(--mal-link-text);
+      padding: 8px 15px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+    }
+    .malLink:hover {
+      background-color: var(--mal-link-hover-bg);
+    }
+
+    .scoreRank {
+      display: flex;
+      flex-wrap: wrap; 
+      gap: 15px; 
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+    .score, .rank, .popularity {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: var(--card-bg);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      min-width: 80px; 
+    }
+    .scoreValue, .rankValue, .popularityValue {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--accent-color);
+    }
+    .scoreLabel, .rankLabel, .popularityLabel {
+      font-size: 0.7rem; 
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .synopsis {
+      margin-bottom: 20px;
+      line-height: 1.7;
+      font-size: 0.9rem; 
+      color: var(--text-secondary); 
+    }
+    .synopsis h3 {
+      font-size: 1.2rem; 
+      color: var(--text-primary);
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 6px;
+    }
+    .synopsis p {
+        color: var(--text-primary); 
+    }
+
+
+    .metaGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+      gap: 10px 20px; 
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+    }
+    .metaItem {
+        padding: 5px 0; 
+    }
+    .metaItem strong {
+      color: var(--text-primary);
+      margin-right: 8px;
+      font-weight: 500;
+    }
+
+    .tagsContainer {
+      margin-bottom: 20px;
+    }
+    .tagsContainer h3 {
+      font-size: 1.2rem;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      background-color: var(--chip-bg);
+      color: var(--chip-text);
+      padding: 4px 10px;
+      border-radius: 15px;
+      font-size: 0.75rem; 
+    }
+    
+    /* Trailer Modal Styles */
+    .trailerModalOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1001; /* Above header */
+    }
+
+    .trailerModalContent {
+      position: relative;
+      background-color: var(--main-bg);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      width: 90%;
+      max-width: 800px; /* Medium size for the video player */
+    }
+
+    .trailerModalCloseButton {
+      position: absolute;
+      top: -10px; /* Position outside slightly */
+      right: -10px;
+      background-color: var(--accent-color);
+      color: var(--main-bg);
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+     .trailerModalCloseButton:hover {
+        background-color: var(--accent-hover);
+     }
+
+    .videoResponsiveModal {
+      overflow: hidden;
+      padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+      position: relative;
+      height: 0;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+    }
+
+    .videoResponsiveModal iframe {
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+    }
+
+
+    /* Mobile specific adjustments if needed */
+    @media (max-width: 768px) {
+      .title {
+        font-size: 1.7rem;
+      }
+      .titleJapanese {
+        font-size: 0.9rem;
+      }
+      .trailerModalContent {
+        width: 95%;
+        padding: 15px;
+      }
+      .trailerModalCloseButton {
+        top: 5px;
+        right: 5px;
+      }
+    }
+
+    @media (max-width: 480px) {
+        .title {
+            font-size: 1.5rem;
+        }
+        .infoArea {
+            padding-top: 15px; 
+        }
+        .scoreRank {
+            justify-content: center; 
+        }
+        .trailerModalPlayButton {
+            width: 50px;
+            height: 50px;
+        }
+        .trailerModalPlayButton svg {
+            width: 24px;
+            height: 24px;
+        }
+    }
+    

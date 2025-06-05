@@ -1,0 +1,73 @@
+/* src/app/globals.css */
+:root {
+  --main-bg: #0d1117;
+  --content-bg: #161b22;
+  --card-bg: #0d1117;
+  --card-body-bg: #161b22;
+  --border-color: #30363d;
+  --text-primary: #c9d1d9;
+  --text-secondary: #8b949e;
+  --accent-color: #58a6ff;
+  --accent-hover: #79c0ff;
+  --title-color: #f0f6fc;
+  --chip-bg: #21262d;
+  --chip-text: var(--text-secondary);
+  --chip-status-finished: #238636;
+  --chip-status-airing: #db6d28;
+  --chip-status-not-yet: #6e7681;
+  --star-color: #ffc107;
+  --search-bar-bg: #21262d; 
+  --search-bar-icon-color: #ffffff;
+  --search-bar-placeholder-color: rgba(255, 255, 255, 0.7);
+  --search-bar-focus-ring-color: #21262d;
+  --mal-link-bg: #2e51a2;
+  --mal-link-text: #ffffff;
+  --mal-link-hover-bg: #254180;
+}
+
+html {
+  box-sizing: border-box;
+  font-family: var(--font-rubik, 'Rubik', sans-serif);
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+body {
+  background-color: var(--main-bg);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  min-height: 100vh;
+  margin: 0;
+  padding: 0; /* Body padding is removed, handled by page-content-wrapper */
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--content-bg);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58; 
+}

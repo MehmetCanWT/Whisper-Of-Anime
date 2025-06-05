@@ -1,0 +1,115 @@
+/* src/components/Header.module.css */
+.siteHeader {
+  width: 100%;
+  max-width: 700px; /* Max width for the centered header content */
+  margin: 25px auto; /* Centers the header block itself */
+  padding: 0; /* No padding for the header block, page-content-wrapper handles page gutters */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center home icon and search container */
+  gap: 15px;
+  position: relative; 
+  z-index: 1000;
+}
+
+.homeIcon {
+  color: var(--accent-color);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.homeIcon svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--accent-color);
+}
+
+.homeIcon:hover,
+.homeIcon:focus {
+  background-color: rgba(88, 166, 255, 0.1);
+  outline: none;
+}
+
+.searchContainer {
+  flex-grow: 1; /* Allow search to take available space within its max-width */
+  max-width: 450px; 
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--search-bar-bg);
+  border-radius: 25px;
+  padding: 5px 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  border: 1px solid var(--border-color); 
+}
+
+.searchInput {
+  flex-grow: 1;
+  padding: 10px 5px;
+  font-size: 1rem;
+  border: none;
+  background-color: transparent;
+  color: var(--search-bar-icon-color);
+  box-sizing: border-box;
+}
+
+.searchInput::placeholder {
+  color: var(--search-bar-placeholder-color);
+  opacity: 1;
+}
+
+.searchInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--search-bar-focus-ring-color); 
+}
+
+.searchIcon {
+  font-size: 1.5rem;
+  color: var(--search-bar-icon-color);
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.searchSuggestionsContainer {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+  background-color: var(--card-body-bg);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 999;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  display: none; 
+}
+    
+.suggestionItem {
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+}
+.suggestionItem:hover {
+  background-color: var(--content-bg);
+}
+.suggestionItem img {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 3px;
+}
+.suggestionItem span {
+  font-size: 0.9rem;
+}

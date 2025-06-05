@@ -1,0 +1,137 @@
+/* src/components/JikanPlaceholder.module.css */
+.placeholderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  color: var(--text-primary);
+  font-family: var(--font-rubik);
+  padding: 10px; /* Add some internal padding */
+}
+
+.patreonBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ff424d; /* Patreon red */
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+  transition: background-color 0.2s ease;
+}
+.patreonBanner:hover {
+  background-color: #f0303d;
+}
+.patreonBanner svg {
+  width: 16px;
+  height: 16px;
+  stroke: white;
+}
+
+.headingGroup h1 {
+  font-family: var(--font-rubik);
+  font-size: 2rem; /* Slightly smaller H1 */
+  font-weight: 700; /* Bolder */
+  color: var(--title-color);
+  margin-bottom: 8px;
+}
+
+.headingGroup p {
+  font-family: var(--font-rubik);
+  font-size: 0.9rem; /* Slightly smaller paragraph */
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.headingGroup p strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.infoDisplayGroup {
+  display: grid; /* Use grid for better alignment */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive columns */
+  gap: 10px;
+  width: 100%; /* Take full width of container */
+  margin-bottom: 20px;
+}
+
+.infoDisplay {
+  display: flex; /* Changed to flex */
+  align-items: center;
+  gap: 8px;
+  background-color: var(--content-bg);
+  padding: 10px 12px; /* Increased padding */
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  font-size: 0.75rem; /* Slightly smaller text */
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+.infoDisplay:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+  background-color: var(--main-bg); /* Darken on hover */
+}
+.infoDisplay svg {
+  stroke: var(--text-secondary);
+  width: 16px; /* Slightly smaller icons */
+  height: 16px;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+  transition: stroke 0.2s ease;
+}
+.infoDisplay:hover svg {
+  stroke: var(--accent-color);
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+  width: 100%; /* Make button group take full width */
+}
+
+.button {
+  padding: 9px 16px; /* Slightly adjusted padding */
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.85rem; /* Slightly smaller text */
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center; /* Center text in button */
+  gap: 6px;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border: 1px solid transparent;
+  flex-grow: 1; /* Make buttons take equal width */
+}
+.buttonPrimary {
+  background-color: var(--accent-color);
+  color: var(--main-bg); /* Dark text for contrast on light blue button */
+  border-color: var(--accent-color);
+}
+.buttonPrimary:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.buttonSecondaryOutline {
+  background-color: transparent;
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+}
+.buttonSecondaryOutline:hover {
+  background-color: rgba(88, 166, 255, 0.1); /* Light accent color bg on hover */
+  /* color: var(--main-bg); Removed this, so text color remains accent */
+}
+.buttonSecondaryOutline svg { /* For "Get started" icon */
+  stroke: var(--accent-color);
+  width: 16px;
+  height: 16px;
+  transition: stroke 0.2s ease;
+}
+/* No hover change needed for this icon if button bg changes */

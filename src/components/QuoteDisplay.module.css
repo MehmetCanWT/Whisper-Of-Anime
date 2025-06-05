@@ -1,0 +1,28 @@
+/* src/components/QuoteDisplay.module.css */
+.quoteText {
+  font-family: var(--font-imfell); /* Using CSS variable from layout.tsx */
+  font-size: 1.8rem;
+  font-weight: normal;
+  margin-bottom: 20px;
+  color: var(--title-color);
+  min-height: 70px; /* Ensure some space even when loading */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+  line-height: 1.4;
+}
+
+.authorText {
+  font-family: var(--font-imfell);
+  font-size: 1.2rem;
+  font-style: italic;
+  margin-bottom: 15px;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  text-align: right; /* Align author to the right */
+}
+
+.showText { /* If you decide to use the #show div */
+  font-family: var(--font-rubik);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 5px;
+}

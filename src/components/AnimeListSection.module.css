@@ -1,0 +1,59 @@
+/* src/components/AnimeListSection.module.css */
+.animeListSection {
+  background-color: transparent;
+  width: 100%;
+  /* padding: 0 20px; This padding is now handled by #page-content-wrapper via page.module.css for .moreAnimeSections or by body for quoteBox/detailView */
+  padding: 0; /* Section itself has no specific horizontal padding now */
+  box-sizing: border-box;
+}
+
+.sectionTitle {
+  font-family: var(--font-rubik);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--title-color);
+  margin-top: 0;
+  margin-bottom: 15px;
+  text-align: left;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.animeGrid {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  gap: 16px;
+  padding: 5px 0px 15px 0px; /* Vertical padding, no horizontal for full bleed within its section */
+  -webkit-overflow-scrolling: touch;
+  width: 100%; 
+  box-sizing: border-box;
+}
+
+/* ... (rest of the scrollbar and loading/error styles remain the same) ... */
+.animeGrid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.animeGrid::-webkit-scrollbar-track {
+  background: var(--content-bg);
+  border-radius: 4px;
+}
+
+.animeGrid::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.animeGrid::-webkit-scrollbar-thumb:hover {
+  background: #484f58; 
+}
+
+.loadingText,
+.errorText {
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 40px 0;
+  font-family: var(--font-rubik);
+}
