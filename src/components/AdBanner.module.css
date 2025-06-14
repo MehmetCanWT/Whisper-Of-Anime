@@ -1,0 +1,10 @@
+/* src/components/AdBanner.module.css */
+.adContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 20px 0 40px 0; /* Space above and below the ad banner */
+  min-height: 90px; /* Ensure space is reserved for the ad to prevent layout shift */
+}
+
